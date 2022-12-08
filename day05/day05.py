@@ -68,49 +68,60 @@ def move_crates(stack_drawing, stack_directions):
 	# [1] = Start location.
 	# [2] = End location.
 	stack_rearranged = stack_drawing.copy()
-	stack_row_index_length = len(stack_rearranged) - 1
+	stack_row_index_length = len(stack_rearranged)
+	stack_column_index_length = len(stack_rearranged[0])
 	remapped_crate_indices = remap_crate_indices(stack_rearranged)
-	remapped_crate_indices_length = len(remapped_crate_indices)
 
-	for index in remapped_crate_indices:
-		for row in stack_rearranged:
-			print(row[int(index)])
-		print("")
+	# for index in remapped_crate_indices:
+	# 	for row in stack_rearranged:
+	# 		print(row[int(index)])
+	# 	print("")
 
 	for stack_direction in stack_directions:
 		quantity = int(stack_direction[0])
+
 		# Have to subtract 1 in order to make this index friendly and map to our remapped indices.
 		start_location = remapped_crate_indices[int(stack_direction[1]) - 1]
 		end_location = remapped_crate_indices[int(stack_direction[2]) - 1]
+		
 		crate_counter = 0
-		crate_start_counter = 0
-		crate_end_counter = 0
-		non_empty_crate_start_index = 0
-		non_empty_crate_end_index = stack_row_index_length
-		crate_start = stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location]
-		crate_end = stack_rearranged[-2 + non_empty_crate_end_index + crate_end_counter][end_location]
+
+		crate_start_row_counter = 0
+		crate_start_row_index = 0
+		crate_start_row = stack_rearranged[crate_start_row_index + crate_start_row_counter]
+		crate_start = crate_start_row[start_location]
+
+		crate_end_row_counter = 0
+		crate_end_row_index = -2
+		crate_end_row = stack_rearranged[crate_end_row_index + crate_end_row_counter]
+		crate_end = crate_end_row[end_location]
 
 		while crate_counter < quantity:
+
+			# Find a crate to start at and not an empty slot.
 			while not crate_start[0].isalpha():
-				crate_start = stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location]
-				crate_start_counter += 1
+				crate_start_row_counter += 1
+				crate_start_row = stack_rearranged[(crate_start_row_index + crate_start_row_counter) % stack_row_index_length]
+				crate_start = crate_start_row[start_location]
 
-			while crate_end[0].isdigit() or crate_end[0].isalpha():
-				# Have to negate this to get a true comparison. Right now, the first comparison value is being used as an index.
-				if -(-2 + non_empty_crate_end_index + crate_end_counter) >= stack_row_index_length:
-					stack_rearranged.insert(0, [[] for _ in range(2)])
-					crate_end_counter = 0
+			# Find an empty slot to put the crate (don't put a crate on top of another crate).
+			while crate_end[0].isalpha():
+				print()
+				print()
+				if -(crate_end_row_index + crate_end_row_counter) >= (stack_row_index_length - 1):
+					stack_rearranged.insert(0, [[" "] for _ in range(stack_column_index_length)])
 					print("once")
-					crate_end = stack_rearranged[-2 + non_empty_crate_end_index + crate_end_counter][end_location]
+				crate_end_row_counter -= 1
+				crate_end_row = stack_rearranged[(crate_end_row_index + crate_end_row_counter) % stack_row_index_length]
+				crate_end = crate_end_row[end_location]
 
 
-				else:
-					stack_rearranged[-2 + non_empty_crate_end_index + crate_end_counter][end_location][0] = stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location][0]
-					stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location][0] = " "
-					crate_end = stack_rearranged[-2 + non_empty_crate_end_index + crate_end_counter][end_location]
+				# else:
+				# 	stack_rearranged[-2 + crate_end_row_index + crate_end_row_counter][end_location][0] = stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location][0]
+				# 	stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location][0] = " "
+				# 	crate_end = stack_rearranged[-2 + crate_end_row_index + crate_end_row_counter][end_location]
 	
-				crate_end_counter -= 1
-
+			print(crate_start)
 			crate_counter += 1
 
 	print("===========================")
