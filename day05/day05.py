@@ -1,24 +1,31 @@
 import re
 
 # Part 1
-# Answer: 
+# Answer: QNHWJVJZW
 with open("input.txt") as f_handle:
 	f_content = f_handle.readlines()
 
-# Test Data: Answer should be CMZ.
-with open("test_input.txt") as f_handle:
-	f_content = f_handle.readlines()
+# # Test Data: Answer should be CMZ.
+# with open("test_input.txt") as f_handle:
+# 	f_content = f_handle.readlines()
 
 separator = f_content.index("\n")
 
 stack_drawing = []
-stack_directions = []
-
 stack_drawing.extend(f_content[0:separator])
+
+stack_directions = []
 stack_directions.extend(f_content[separator + 1:])
 
+stack_rearranged = []
+
+remapped_crate_indices = []
+
+
 def generate_clean_stack_drawing(stack_drawing):
-	# Cleans up stack drawing from input file; readying it for processing.
+	"""
+	Clean up stack drawing from input file and ready it for processing.
+	"""
 	stack_drawing_clean = []
 	for line in stack_drawing:
 		line = line.strip("\n")
@@ -37,7 +44,9 @@ def generate_clean_stack_drawing(stack_drawing):
 
 
 def generate_clean_stack_directions(stack_directions):
-	# Cleans up stack directions from input file; readying it for processing.
+	"""
+	Clean up stack directions from input file and ready it for processing.
+	"""
 	stack_directions_clean = []
 	
 	for line in stack_directions:
@@ -45,6 +54,7 @@ def generate_clean_stack_directions(stack_directions):
 		stack_directions_clean.append(re.findall(r"([0-9]+)", line))
 
 	return stack_directions_clean
+
 
 def remap_crate_indices(stack_drawing):
 	"""
@@ -69,73 +79,78 @@ def move_crates(stack_drawing, stack_directions):
 	# [2] = End location.
 	stack_rearranged = stack_drawing.copy()
 	stack_row_index_length = len(stack_rearranged)
-	stack_column_index_length = len(stack_rearranged[0])
+	stack_column_index_length = len(stack_rearranged[-1])
 	remapped_crate_indices = remap_crate_indices(stack_rearranged)
-
-	# for index in remapped_crate_indices:
-	# 	for row in stack_rearranged:
-	# 		print(row[int(index)])
-	# 	print("")
 
 	for stack_direction in stack_directions:
 		quantity = int(stack_direction[0])
 
-		# Have to subtract 1 in order to make this index friendly and map to our remapped indices.
+		# Subtract 1 to turn into an index that can be map to the remapped indices.
 		start_location = remapped_crate_indices[int(stack_direction[1]) - 1]
 		end_location = remapped_crate_indices[int(stack_direction[2]) - 1]
 		
 		crate_counter = 0
 
-		crate_start_row_counter = 0
-		crate_start_row_index = 0
-		crate_start_row = stack_rearranged[crate_start_row_index + crate_start_row_counter]
-		crate_start = crate_start_row[start_location]
+		while crate_counter != quantity:
+			# Start from the top. Do not include the last row as that does not contain any crate information.
+			start_row_index = 0
+			for row_index in range(0, stack_row_index_length - 1):
+				if stack_rearranged[row_index][start_location][0].isalpha():
+					start_row_index = row_index
+					break
 
-		crate_end_row_counter = 0
-		crate_end_row_index = -2
-		crate_end_row = stack_rearranged[crate_end_row_index + crate_end_row_counter]
-		crate_end = crate_end_row[end_location]
+			# Start from the bottom. Do not include the last row as that does not contain any crate information.
+			end_row_index = 0
+			for row_index in range(2, stack_row_index_length + 1):
+				if not stack_rearranged[-row_index][end_location][0].isalpha():
+					end_row_index = -row_index
+					break
 
-		while crate_counter < quantity:
+				# Add new row if the column needed for the new crate is already occupied.	
+				elif row_index >= stack_row_index_length:
+					inverse_row_index = -row_index
+					stack_rearranged.insert(inverse_row_index, [[" "] for _ in range(stack_column_index_length)])
+					stack_row_index_length = len(stack_rearranged)
+					end_row_index = inverse_row_index - 1
+					# Because a new row was inserted the start row index needs to be incremented to account for the shifting of rows to make room for the additional crate.
+					start_row_index = start_row_index + 1
+					break
 
-			# Find a crate to start at and not an empty slot.
-			while not crate_start[0].isalpha():
-				crate_start_row_counter += 1
-				crate_start_row = stack_rearranged[(crate_start_row_index + crate_start_row_counter) % stack_row_index_length]
-				crate_start = crate_start_row[start_location]
+			# Logic for moving the crates around, one by one.
+			stack_rearranged[end_row_index][end_location][0] = stack_rearranged[start_row_index][start_location][0]
+			stack_rearranged[start_row_index][start_location][0] = " "
 
-			# Find an empty slot to put the crate (don't put a crate on top of another crate).
-			while crate_end[0].isalpha():
-				print()
-				print()
-				if -(crate_end_row_index + crate_end_row_counter) >= (stack_row_index_length - 1):
-					stack_rearranged.insert(0, [[" "] for _ in range(stack_column_index_length)])
-					print("once")
-				crate_end_row_counter -= 1
-				crate_end_row = stack_rearranged[(crate_end_row_index + crate_end_row_counter) % stack_row_index_length]
-				crate_end = crate_end_row[end_location]
-
-
-				# else:
-				# 	stack_rearranged[-2 + crate_end_row_index + crate_end_row_counter][end_location][0] = stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location][0]
-				# 	stack_rearranged[0 + non_empty_crate_start_index + crate_start_counter][start_location][0] = " "
-				# 	crate_end = stack_rearranged[-2 + crate_end_row_index + crate_end_row_counter][end_location]
-	
-			print(crate_start)
 			crate_counter += 1
 
-	print("===========================")
+	# print("==========")
+	# for index in remapped_crate_indices:
+	# 	for row in stack_rearranged:
+	# 		print(row[int(index)])
+	# print("==========")
+
+	return (stack_rearranged, remapped_crate_indices)
 
 
+def reveal_message(stack_rearranged, remapped_crate_indices):
+	"""
+	Figures out the crate at the very top of each stack (column) and combines the result in order to reveal the message.
+	"""
+	top_crates = []
 	for index in remapped_crate_indices:
 		for row in stack_rearranged:
-			print(row[int(index)])
-		print("")
+			if row[int(index)][0].isalpha():
+				top_crates.append(row[int(index)][0])
+				break
+
+	return "".join(top_crates)
 
 stack_drawing = generate_clean_stack_drawing(stack_drawing)
 
 stack_directions = generate_clean_stack_directions(stack_directions)
 
-move_crates(stack_drawing, stack_directions)
+stack_rearranged, remapped_crate_indices = move_crates(stack_drawing, stack_directions)
+
+print(reveal_message(stack_rearranged, remapped_crate_indices))
+
 # Part 2
 # Answer:
