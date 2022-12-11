@@ -5,7 +5,7 @@ import re
 with open("input.txt") as f_handle:
 	f_content = f_handle.readlines()
 
-# # Test Data: Answer should be CMZ.
+# Test Data: Answer should be CMZ for part 1 and MCD for part 2.
 # with open("test_input.txt") as f_handle:
 # 	f_content = f_handle.readlines()
 
@@ -71,8 +71,8 @@ def remap_crate_indices(stack_drawing):
 
 	return remapped_crate_indices
 
-
-def move_crates(stack_drawing, stack_directions):
+# Solution for part 1.
+def move_crates(stack_drawing, stack_directions, preserve_crate_order = False):
 	# Rearrange the crates based on the directions.
 	# [0] = How many to move.
 	# [1] = Start location.
@@ -92,12 +92,25 @@ def move_crates(stack_drawing, stack_directions):
 		crate_counter = 0
 
 		while crate_counter != quantity:
-			# Start from the top. Do not include the last row as that does not contain any crate information.
 			start_row_index = 0
-			for row_index in range(0, stack_row_index_length - 1):
-				if stack_rearranged[row_index][start_location][0].isalpha():
-					start_row_index = row_index
-					break
+			# Start from the top and find the top most crate. 
+			# Do not include the last row as that does not contain any crate information.
+			# From the top most crate, take into consideration the total amount of crates that need 
+			# to be moved and start moving the crates from there in order to preserve the crate order. 
+			if preserve_crate_order:
+				for row_index in range(0, stack_row_index_length - 1):
+					if stack_rearranged[row_index][start_location][0].isalpha():
+						# This change updates the crate moving functionality; preserving the crate order.
+						start_row_index = row_index + (quantity - crate_counter) - 1
+						break
+
+			# Start from the top and find the top most crate. 
+			# Do not include the last row as that does not contain any crate information.
+			else:
+				for row_index in range(0, stack_row_index_length - 1):
+					if stack_rearranged[row_index][start_location][0].isalpha():
+						start_row_index = row_index
+						break
 
 			# Start from the bottom. Do not include the last row as that does not contain any crate information.
 			end_row_index = 0
@@ -126,6 +139,7 @@ def move_crates(stack_drawing, stack_directions):
 	# for index in remapped_crate_indices:
 	# 	for row in stack_rearranged:
 	# 		print(row[int(index)])
+	# 	print()
 	# print("==========")
 
 	return (stack_rearranged, remapped_crate_indices)
@@ -144,13 +158,15 @@ def reveal_message(stack_rearranged, remapped_crate_indices):
 
 	return "".join(top_crates)
 
+
 stack_drawing = generate_clean_stack_drawing(stack_drawing)
 
 stack_directions = generate_clean_stack_directions(stack_directions)
 
-stack_rearranged, remapped_crate_indices = move_crates(stack_drawing, stack_directions)
-
+# Solution for part 1 vs 2 depends on the bool flag value passed into the move_crates function.
+stack_rearranged, remapped_crate_indices = move_crates(stack_drawing, stack_directions, preserve_crate_order = True)
 print(reveal_message(stack_rearranged, remapped_crate_indices))
 
+
 # Part 2
-# Answer:
+# Answer: BPCZJLFJW
