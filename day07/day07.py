@@ -1,72 +1,138 @@
 # Part 1
-# Answer: 1850
-# Comment out ELVEN_PROTOCOL = 14 to print out the answer for this one.
+# Answer: 
 with open("input.txt") as f_handle:
 	f_content = f_handle.read()
 
+# file_system["root"].append(("file_01", 80000))
+# file_system["root"].append(("file_02", 40000))
+# file_system["root"].append({"a":[]})
+# file_system["root"][2]["a"].append(("file_03", 160000))
+# file_system["root"][2]["a"].append(("file_04", 320000))
+
+# file_system["root"][2]["a"].append({"b":[]})
+
+# file_system["root"][2]["a"][2]["b"].append(("file_05", 640000))
+
 # Test Data: 
-# # Answer should be 7.
-# f_content = "mjqjpqmgbljsphdztnvjfqwrcgsmlb"
+f_content = [
+"$ cd /",
+"$ ls",
+"dir a",
+"14848514 b.txt",
+"8504156 c.dat",
+"dir d",
+"$ cd a",
+"$ ls",
+"dir e",
+"29116 f",
+"2557 g",
+"62596 h.lst",
+"$ cd e",
+"$ ls",
+"584 i",
+"$ cd ..",
+"$ cd ..",
+"$ cd d",
+"$ ls",
+"4060174 j",
+"8033020 d.log",
+"5626152 d.ext",
+"7214296 k"]
 
-# # Answer should be 5.
-# f_content = "bvwbjplbgvbhsrlpgdmjqwftvncz"
+ROOT_DIRECTORY = "/"
 
-# # Answer should be 6.
-# f_content = "nppdvjthqldpwncqszvftbrmjlhg"
+file_system = {ROOT_DIRECTORY:[]}
 
-# # Answer should be 10.
-# f_content = "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"
+current_directory_contents = file_system[ROOT_DIRECTORY]
 
-# # Answer should be 11.
-# f_content = "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"
+current_directory_name = ROOT_DIRECTORY
 
-# For part 1 solution (packet marker).
-ELVEN_PROTOCOL = 4
 
-# For part 2 solution (message marker).
-ELVEN_PROTOCOL = 14
+def change_current_directory_contents(current_directory_name, current_directory_contents, directory_target_command):
+	
+	if directory_target_command == "..":
+		# Moves out one level.
+		pass
+		# for i in current_directory_contents:
+		#     if isinstance(i, dict):
+		#     	current_directory_contents_index = current_directory_contents.index(i)
+		#     	current_directory_contents = current_directory_contents[current_directory_contents_index][directory_target_command]
+		#     	current_directory_name = current_directory_contents[current_directory_contents_index]
 
-f_content_length = len(f_content)
 
-marker_found = False
-
-marker_position = 0
-
-for char_index in range(f_content_length):
-	char_count_forwards = 0
-	find_marker = []
-
-	if marker_found:
-		break
+	elif directory_target_command == "/":
+		# Switches the current directory to the outermost directory.
+		current_directory_contents = file_system[ROOT_DIRECTORY]
+		current_directory_name = ROOT_DIRECTORY
 	else:
-		# Based on the protocol (packet OR message marker); start looking for the marker at the major indices.
-		# Example: (0, 4, 8, 12, etc.) for a packet marker.
-		if char_index % ELVEN_PROTOCOL == 0:
-			while char_count_forwards != ELVEN_PROTOCOL:
-				# Starting at that major index, search forward and then backwards based on the established protocol.
-				starting_char_index = char_index + char_count_forwards
-				starting_char = f_content[starting_char_index]
+		# Moves in one level.
+		for i in current_directory_contents:
+			print(i)
+			# if isinstance(i, dict):
+			# 	current_directory_contents_index = current_directory_contents.index(i)
+			# 	current_directory_contents = current_directory_contents[current_directory_contents_index][directory_target_command]
+			# 	current_directory_name = current_directory_contents[current_directory_contents_index]
 
-				# Keep track of the search results.
-				for i in range(ELVEN_PROTOCOL):
-					find_marker.append(f_content[abs(starting_char_index - i)])
-
-				# If there are no duplicates in the results, the marker that follows the established protocol has been found.
-				if len(set(find_marker)) == ELVEN_PROTOCOL:
-					marker_found = True
-
-					# Have to add a 1 to convert from index to... actual "number"? 
-					marker_position = starting_char_index + 1
-					break
-
-				find_marker = []
-				char_count_forwards += 1
-
-			char_count_forwards = 0
+	# print(current_directory_name)
+	# print(current_directory_contents)
+	# print("======")
+	# print()
+	return (current_directory_name, current_directory_contents)
 
 
-print(marker_position)
+def walk_current_directory_contents(current_directory_contents, depth=0):
+	for directories, files in current_directory_contents.items():
+		print(directories.rjust(depth))
+		for file in files:
+			if isinstance(file, dict):
+				walk_current_directory_contents(file, depth=depth + 2)
+			else:
+				print(str(file).rjust(depth + 18))
 
 
-# Part 2
-# Answer: 2823
+def make_file_system(file_system, current_directory_name, current_directory_contents):
+	newly_created_directory_contents = ""
+	current_directory_name = current_directory_name
+
+	for line in f_content:
+		split_line = line.split()
+		if "$" in split_line:
+			# User command entered.
+			if "cd" in split_line:
+				user_commands["cd"](current_directory_name, current_directory_contents, split_line[2])
+				pass
+			elif "ls" in split_line:
+				pass
+				# print(current_directory_contents)
+				# print(current_directory_name)
+
+		elif len(split_line) >=2:
+			# It is a directory or file.
+			if "dir" in split_line:
+				# Create new directory.
+				current_directory_contents.append({split_line[1]:[]})
+				current_directory_name = split_line[1]
+				newly_created_directory_contents = current_directory_contents[-1]
+
+			else:
+				# Create new file.
+				newly_created_directory_contents[current_directory_name].append((split_line[1], split_line[0]))
+				#current_directory_contents.append((split_line[1], split_line[0]))
+
+	# print(current_directory_name)
+	# print(current_directory_contents)
+	return (current_directory_name, current_directory_contents)
+
+user_commands = {"cd":change_current_directory_contents, "ls": walk_current_directory_contents}
+
+current_directory_name, current_directory_contents = make_file_system(file_system, current_directory_name, current_directory_contents)
+
+#walk_current_directory_contents(file_system)
+
+# print(file_system["/"])
+# print()
+# print(file_system["/"][-1]["a"])
+# print()
+# print(file_system["/"][-1]["a"][-1]["e"])
+# print()
+# print(file_system["/"][-1]["d"])
